@@ -26,14 +26,15 @@ namespace righthand
     /// MainWindow.xaml에 대한 상호 작용 논리
     /// </summary>
     public partial class MainWindow : Window
-    {   
+    {
+        int f=0;
         //Linked List
-        public class TouchPoint
+        public class TouchPoint                 //포인트를 저장할 객체 클래스
         {
-            private double X;
-            private double Y;
-            private bool exist;
-            private TouchPoint nextPoint;
+            private double X;                   //포인트의 x좌표
+            private double Y;                   //포인트의 y좌표
+            private bool exist;                 //같은점인지 판단여부 flag개념, 새로생겨났거나 새로고침여부 확인용
+            private TouchPoint nextPoint;       //링크드 리스트를 위한 다음 포인트
             public TouchPoint(double x, double y)
             {
                 this.X = x;
@@ -45,13 +46,13 @@ namespace righthand
             {
                 return nextPoint;
             }
-            public void insert(TouchPoint T)
+            public void insert(TouchPoint T)    //현재 head와 head가 가르키고 있는 next포인트 사이에 새로운 포인트 T를 삽입
             {
                 T.nextPoint = this.nextPoint;
                 this.nextPoint = T;
                 T.setExist(true);
             }
-            public void removeNext()
+            public void removeNext()            //head의 next포인트를 삭제
             {
                 TouchPoint T = next();
                 if (T == null)
@@ -100,48 +101,44 @@ namespace righthand
         public MainWindow()
         {
             InitializeComponent();
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 6; i++)
             {
-                squar[i] = new Point(-10, 0);
+                myEllipse[i] = new Ellipse();       //초록색 점 찍기위한 배열
             }
-            for (int i = 0; i < 5; i++)
-            {
-                myEllipse[i] = new Ellipse();
-            }
-            head = new TouchPoint(-100.0, -100.0);
+            head = new TouchPoint(-100.0, -100.0);  //최초 head초기화
             return;
         }
 
-        public void add(double x, double y)
+        public void add(double x, double y)         //카메라에 새로운 점이 찍혔을 경우 새로운 객체 생성
         {
             TouchPoint T = new TouchPoint(x, y);
             head.insert(T);
             pointCnt++;
             return;
         }
-        public void refresh(double x, double y)
-        {
-            TouchPoint T;
+        public void refresh(double x, double y)     //새로고침
+        {                                           //input으로 들어온 포인트의 중심점을 뜻하는 (x,y)를 링크드 리스트의 포인트들과 비교하여
+            TouchPoint T;                           //이미 존재했던 점이 움직인 것인지 새로 생긴것인지 판별하여 새로생긴 포인트의 경우 add해준다.
             for (T = head; T.next() != null; T = T.next())
             {
                 TouchPoint next = T.next();
-                if ((x - next.getX()) * (x - next.getX()) + (y - next.getY()) * (y - next.getY()) < 100)
+                if ((x - next.getX()) * (x - next.getX()) + (y - next.getY()) * (y - next.getY()) < 400)
                 {
                     next.setX(x);
                     next.setY(y);
                     next.setExist(true);
+                    return;
                 }
-                else
-                    add(x, y);
             }
+            add(x, y);
         }
-        public void initExist()
+        public void initExist()             //링크드 리스트의 모든 포인터들의 exist를 false로 초기화
         {
             TouchPoint T;
             for (T = head; T.next() != null; T = T.next())
                 T.next().setExist(false);
         }
-        public void removeNoneExist()
+        public void removeNoneExist()       //전 프레임과 비교하여 있던점이 사라졌을 경우 링크드 리스트의 포인트를 삭제해준다.
         {
             TouchPoint T;
             for (T = head; T.next() != null; T = T.next())
@@ -164,14 +161,10 @@ namespace righthand
         DepthImagePixel[] initDepthPixels;
         WriteableBitmap colorBitmap;
         private TouchPoint head;
-        Ellipse[] myEllipse = new Ellipse[5];
+        Ellipse[] myEllipse = new Ellipse[6];
         bool init = true;
         byte[] colorPixels;
         byte[,] colorMap = new byte[45, 3];
-        Point squarpoint = new Point(0, 0);
-        Point[] touchPoint = new Point[10];
-        Point[] squar = new Point[4];
-        float[] squardepth = new float[4];
         int pixelCnt = 0;
         int pointCnt = 0;
         int s_Row=0;
@@ -210,7 +203,7 @@ namespace righthand
             nui.DepthFrameReady += nui_DepthFrameReady;
 
 
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 6; i++)
             {
                 string str = i.ToString();
                 myEllipse[i].Name = "Target" + str;
@@ -247,9 +240,9 @@ namespace righthand
                     }
                     int colorPixelIndex = 0;
 
-                    for (int i = 0; i < depthPixels.Length; ++i)
-                    {
-                        short currentDepth = depthPixels[i].Depth;
+                    for (int i = 0; i < depthPixels.Length; ++i)                //depth값에 따라 색깔을 달리해서 출력한다.
+                    {                                                           //최초 인식된 벽값과 비교하여 터치가 일어났을 경우 빨간색으로 출력하고
+                        short currentDepth = depthPixels[i].Depth;              //최초 인식된 벽값과 같을경우 파란색으로 표시한다.
                         short initDepth = initDepthPixels[i].Depth;
                         byte currentIntensity = (byte)(currentDepth >= minDepth && currentDepth <= maxDepth ? currentDepth : 0);
                         byte initIntensity = (byte)(initDepth >= minDepth && initDepth <= maxDepth ? initDepth : 0);
@@ -274,7 +267,6 @@ namespace righthand
 
                         if (subDepth < 0)
                             subDepth = 0;
-
                         if (0 <= subDepth && subDepth <= 10)//initDepth - currentDepth < 3)//initIntensity - currentIntensity == 0)
                         {
                             colorPixels[colorPixelIndex++] = 255;//(byte)(initIntensity - currentIntensity);
@@ -295,17 +287,19 @@ namespace righthand
                         }
                         ++colorPixelIndex;
                     }
-                    for (int i = 0; i < depthPixels.Length; ++i)
+                    for (int i = 0; i < depthPixels.Length; ++i)        //모든 픽셀들에서 검사한다.
                     {
-                        if (pointCnt > 4)
+                        if (pointCnt > 5)
                             break;
-                        if (colorPixels[i * 4 + 1] == 0 && colorPixels[i * 4 + 2] == 255 && i%640 >= 159 && i%640 <= 479 && i/640 >= 119 && i/640 <= 359 )
+                        if (colorPixels[i * 4 + 1] == 0 && colorPixels[i * 4 + 2] == 255 && i%640 >= 159 && i%640 <= 479 && i/640 >= 119 && i/640 <= 359 )      //필요한 부분만 검사한다.
                         {
-                            setPoint(i); // 빨간색을 가진 Pixel을 찾는 재귀 함수
-                            if (pixelCnt > 30 )//&& pixelCnt < 100)
-                            {
+                            setPoint(i); //
+                            if (pixelCnt > 30 )//&& pixelCnt < 100)         //빨간색 픽셀이 30개 이상 검출된 포인트의 경우
+                            {                                               //새로고침 해주거나 최초의 포인트인경우 add해준다.
                                 if (head.next() != null)
+                                {
                                     refresh(s_Row / pixelCnt, s_Col / pixelCnt);
+                                }
                                 else
                                     add(s_Row / pixelCnt, s_Col / pixelCnt);
                             }
@@ -314,11 +308,12 @@ namespace righthand
                             pixelCnt = 0;
                         }
                     }
-                    removeNoneExist();
+
+                    removeNoneExist();          //없어진 포인트를 지운다.
                     setEllipse();
                     if (head.next() != null)
                     {
-                        textBox1.Text = string.Format("( {0:0.00}, {1:0.00})", head.next().getX(), head.next().getY());
+                        textBox1.Text = string.Format("( {0:0.00}, {1:0.00}, {2:0.00}))", head.next().getX(), head.next().getY(),f);
                         if (head.next().next() != null)
                         {
                             textBox2.Text = string.Format("( {0:0.00}, {1:0.00})", head.next().next().getX(), head.next().next().getY());
@@ -327,8 +322,6 @@ namespace righthand
                             
                         }
                     }
-                    else
-                        textBox1.Text = string.Format("( {0:0.00}, {1:0.00})", 0,0);
 
                     colorBitmap.WritePixels(new Int32Rect(0, 0, colorBitmap.PixelWidth, colorBitmap.PixelHeight), colorPixels, colorBitmap.PixelWidth * sizeof(int), 0);
                
@@ -336,14 +329,14 @@ namespace righthand
                 }
             }
         }
-        void setPoint(int i)
-        {
+        void setPoint(int i)            //i번째 픽셀을 검사해서 빨간색일경우 주변 4방향 픽셀들을 재귀로 검사하여
+        {                               //연결된 빨간픽셀들의 중점을 s_Col, s_Row에 저장한다.
             if (i < 0 || i >= 307200)
                 return;
             else if (colorPixels[i * 4 + 1] == 0 && colorPixels[i * 4 + 2] == 255)
             {
-                colorPixels[i * 4 + 1] = 1; // 한번 지나간곳은 +로 바꿔서 안들리게함
-                pixelCnt++; // 일정픽셀이상만 포인트로 인식함
+                colorPixels[i * 4 + 1] = 1; // 한번 지나간곳은 Green값을 1로 바꿔서 다시 참조하지 않게 한다.
+                pixelCnt++;                 // 일정픽셀이상만 포인트로 인식함
                 s_Col += i / 640;
                 s_Row += i % 640;
             }
@@ -358,11 +351,18 @@ namespace righthand
         {
             TouchPoint T;
             int i = 0;
+            f = 0;
             for (T = head; T.next() != null; T = T.next())
             {   
-                Canvas.SetLeft(myEllipse[i], T.getX());
-                Canvas.SetTop(myEllipse[i], T.getY());
+                Canvas.SetLeft(myEllipse[i], T.next().getX());
+                Canvas.SetTop(myEllipse[i], T.next().getY());
+                f++;
                 i++;
+            }
+            for (int j = i; j < 6; j++)
+            {
+                Canvas.SetLeft(myEllipse[j],-10);
+                Canvas.SetTop(myEllipse[j], -10);
             }
         }
         private void Window_Closed(object sender, EventArgs e)
