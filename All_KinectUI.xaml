@@ -1,0 +1,20 @@
+﻿<Window x:Class="KinectUI.ToolBar"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="900" Width="1600" Loaded="Window_Loaded" Closed="Window_Closed" ResizeMode="NoResize" WindowState="Maximized" AllowsTransparency="True" Background="{x:Null}" WindowStyle="None" WindowStartupLocation="CenterScreen" Topmost="True">
+    <Grid Background="Transparent">
+        <InkCanvas x:Name="inkCanvas" HorizontalAlignment="Left" VerticalAlignment="Top" Width="1600" Height="900" Background="#00898989"  PreviewMouseRightButtonDown="Preview_Mouse_Right_Button_Down"  Panel.ZIndex="1"  >
+            <InkCanvas.DefaultDrawingAttributes>
+                <DrawingAttributes Height="5" Width="5"/>
+            </InkCanvas.DefaultDrawingAttributes>
+        </InkCanvas>
+        <Image Name="open" Source="images\close.png" Height="70" Width="70" HorizontalAlignment="Right" VerticalAlignment="Top" Grid.Row="0" MouseEnter="open_MouseEnter" MouseLeave="open_MouseLeave" MouseLeftButtonDown="open_MouseLeftButtonDown" Panel.ZIndex="2" Margin="0,178,0,0"/>
+        <Image Name="pen" Opacity="1" Source="images\pen.png" Height="70" Width="70" HorizontalAlignment="Right" VerticalAlignment="Top" MouseEnter="pen_MouseEnter" MouseLeave="pen_MouseLeave" MouseLeftButtonDown="pen_MouseLeftButtonDown" Margin="0,253,0,0" Panel.ZIndex="2"/>
+        <Image Name="keyboard" Opacity="1" Source="images\keyboard.png" Height="70" Width="70" HorizontalAlignment="Right" VerticalAlignment="Top" MouseLeftButtonDown="keyboard_MouseLeftButtonDown" MouseLeave="keyboard_MouseLeave" MouseEnter="keyboard_MouseEnter" Margin="0,328,0,0" Panel.ZIndex="2"/>
+        <Image Name="capture" Opacity="1" Source="images\capture.png" Height="70" Width="70" HorizontalAlignment="Right" VerticalAlignment="Top" MouseEnter="capture_MouseEnter" MouseLeave="capture_MouseLeave" MouseLeftButtonDown="capture_MouseLeftButtonDown" Margin="0,403,0,0" Panel.ZIndex="2"/>
+        <Image Name="usermode" Opacity="1" Source="images\usermode.png"  Height="70" Width="70" HorizontalAlignment="Right" VerticalAlignment="Top" MouseEnter="usermode_MouseEnter" MouseLeave="usermode_MouseLeave" MouseLeftButtonDown="usermode_MouseLeftButtonDown" Margin="0,478,0,0" Panel.ZIndex="2"/>
+        <Image Name="option" Opacity="1" Source="images\option_1.png" Height="70" Width="70" HorizontalAlignment="Right" VerticalAlignment="Top"  MouseEnter="option_MouseEnter" MouseLeave="option_MouseLeave" MouseLeftButtonDown="option_MouseLeftButtonDown" Margin="0,611,0,0" Panel.ZIndex="2"/>
+        <Image Name="quit" Opacity="1" Source="images\quit_2.png" Height="70" Width="70" HorizontalAlignment="Right" VerticalAlignment="Top" MouseEnter="quit_MouseEnter" MouseLeave="quit_MouseLeave" MouseLeftButtonDown="quit_MouseLeftButtonDown" Margin="0,686,0,0" Panel.ZIndex="2"/>
+    </Grid>
+
+</Window>
