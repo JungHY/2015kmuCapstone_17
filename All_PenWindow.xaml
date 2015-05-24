@@ -1,0 +1,8 @@
+﻿<Window x:Class="KinectUI.PenCanvas2"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+       Title="MainWindow" Width="1600" Height="900"  WindowState="Maximized" AllowsTransparency="True" Background="{x:Null}" WindowStyle="None" WindowStartupLocation="CenterScreen" >
+    <Border>
+        <InkCanvas x:Name="inkCanvas" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="80" Height="480" Background="#01898989"  MouseLeftButtonDown="Mouse_Left_Button_Down" PreviewMouseRightButtonDown="Preview_Mouse_Right_Button_Down" PreviewKeyDown="Preview_Key_Down" />
+    </Border>
+</Window>
