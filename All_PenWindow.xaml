@@ -1,0 +1,16 @@
+﻿<Window x:Class="KinectUI.PenTool"
+       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Document" Height="177" Width="801" WindowStyle="None">
+    <Viewbox>
+        <StackPanel>
+            <DockPanel HorizontalAlignment="Center">
+                <Button Width="40" Height="30" Content="All Erase" Click="btn_AllErase" Background="LightPink" FontSize="8"/>
+                <Button Width="40" Height="30" Content="Erase" Click="btn_Erase" Background="LightCoral"/>
+                <Button Width="40" Height="30" Content="Pen" Click="btn_Pen" Background="LightSteelBlue"/>
+                <Image Source="images/Colors.png" MouseDown="Image_MouseDown" x:Name="colorsImage" Height="55"/>
+            </DockPanel>
+        </StackPanel>
+
+    </Viewbox>
+</Window>
