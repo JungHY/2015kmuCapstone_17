@@ -27,35 +27,32 @@ namespace righthand
     /// </summary>
     public partial class MainWindow : Window
     {
-        int f = 0;
-
+        int f=0;
         //Linked List
-        public class TouchPoint
+        public class TouchPoint                 //포인트를 저장할 객체 클래스
         {
-            private double X;
-            private double Y;
-            private bool exist;
-            private bool click;
-            private TouchPoint nextPoint;
+            private double X;                   //포인트의 x좌표
+            private double Y;                   //포인트의 y좌표
+            private bool exist;                 //같은점인지 판단여부 flag개념, 새로생겨났거나 새로고침여부 확인용
+            private TouchPoint nextPoint;       //링크드 리스트를 위한 다음 포인트
             public TouchPoint(double x, double y)
             {
                 this.X = x;
                 this.Y = y;
                 this.exist = false;
-                this.click = false;
                 nextPoint = null;
             }
             public TouchPoint next()
             {
                 return nextPoint;
             }
-            public void insert(TouchPoint T)
+            public void insert(TouchPoint T)    //현재 head와 head가 가르키고 있는 next포인트 사이에 새로운 포인트 T를 삽입
             {
                 T.nextPoint = this.nextPoint;
                 this.nextPoint = T;
                 T.setExist(true);
             }
-            public void removeNext()
+            public void removeNext()            //head의 next포인트를 삭제
             {
                 TouchPoint T = next();
                 if (T == null)
@@ -78,10 +75,6 @@ namespace righthand
             {
                 return this.exist;
             }
-            public bool getclick()
-            {
-                return this.click;
-            }
             public void setX(double x)
             {
                 this.X = x;
@@ -94,65 +87,38 @@ namespace righthand
             {
                 this.exist = e;
             }
-            public void setclick(bool e)
-            {
-                this.click = e;
-            }
         }
 
         [DllImport("user32.dll")]
         public static extern int SetCursorPos(int x, int y);
         [DllImport("user32.dll")]
-        public static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, IntPtr dwExtraInfo);
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
+        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+        private const int MOUSEEVENTF_LEFTUP = 0x04;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+        private const int MOUSEEVENTF_RIGHTUP = 0x10;
 
         public MainWindow()
         {
             InitializeComponent();
-            /*
-            this.rightCanvas.MouseLeftButtonDown += new MouseButtonEventHandler(Canvas_MLBD);
-            this.rightCanvas.MouseMove += new MouseEventHandler(Canvas_MM);
-            this.rightCanvas.MouseLeftButtonUp += new MouseButtonEventHandler(Canvas_MLBU);
-            */
             for (int i = 0; i < 6; i++)
             {
-                myEllipse[i] = new Ellipse();
+                myEllipse[i] = new Ellipse();       //초록색 점 찍기위한 배열
             }
-            head = new TouchPoint(-100.0, -100.0);
+            head = new TouchPoint(-100.0, -100.0);  //최초 head초기화
             return;
         }
-        public enum MouseEventFlag : int
-        {
-            Absolute = 0x8000,
-            LeftDown = 0x0002,
-            LeftUp = 0x0004,
-            MiddleDown = 0x0020,
-            MiddleUp = 0x0040,
-            Move = 0x0001,
-            RightDown = 0x0008,
-            RightUp = 0x0010,
-            Wheel = 0x0800,
-            XDown = 0x0080,
-            XUp = 0x0100,
-            HWheel = 0x1000,
-        }
-        public enum MouseButton
-        {
-            Left,
-            Right,
-            Middle,
-            X,
-        }
 
-        public void add(double x, double y)
+        public void add(double x, double y)         //카메라에 새로운 점이 찍혔을 경우 새로운 객체 생성
         {
             TouchPoint T = new TouchPoint(x, y);
             head.insert(T);
             pointCnt++;
             return;
         }
-        public void refresh(double x, double y)
-        {
-            TouchPoint T;
+        public void refresh(double x, double y)     //새로고침
+        {                                           //input으로 들어온 포인트의 중심점을 뜻하는 (x,y)를 링크드 리스트의 포인트들과 비교하여
+            TouchPoint T;                           //이미 존재했던 점이 움직인 것인지 새로 생긴것인지 판별하여 새로생긴 포인트의 경우 add해준다.
             for (T = head; T.next() != null; T = T.next())
             {
                 TouchPoint next = T.next();
@@ -166,13 +132,13 @@ namespace righthand
             }
             add(x, y);
         }
-        public void initExist()
+        public void initExist()             //링크드 리스트의 모든 포인터들의 exist를 false로 초기화
         {
             TouchPoint T;
             for (T = head; T.next() != null; T = T.next())
                 T.next().setExist(false);
         }
-        public void removeNoneExist()
+        public void removeNoneExist()       //전 프레임과 비교하여 있던점이 사라졌을 경우 링크드 리스트의 포인트를 삭제해준다.
         {
             TouchPoint T;
             for (T = head; T.next() != null; T = T.next())
@@ -180,8 +146,6 @@ namespace righthand
                 TouchPoint next = T.next();
                 if (!next.getExist())
                 {
-                    T.next().setclick(false);
-                    Up(MouseButton.Left);
                     T.removeNext();
                     T = head;
                     pointCnt--;
@@ -197,27 +161,24 @@ namespace righthand
         DepthImagePixel[] initDepthPixels;
         WriteableBitmap colorBitmap;
         private TouchPoint head;
-        Rectangle screen;
-        Line line;
         Ellipse[] myEllipse = new Ellipse[6];
-        MouseEventArgs mouse;
         bool init = true;
         byte[] colorPixels;
         byte[,] colorMap = new byte[45, 3];
         int pixelCnt = 0;
         int pointCnt = 0;
-        int s_Row = 0;
-        int s_Col = 0;
+        int s_Row=0;
+        int s_Col=0;
+        DispatcherTimer timer = new DispatcherTimer();
         int imageX;
         int imageY;
         const int computerX = 1600;
         const int computerY = 900;
-        bool isDraw;
-        double lastX, lastY;
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.depthPixels = new DepthImagePixel[nui.DepthStream.FramePixelDataLength];
+
 
             nui.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
             depthPixels = new DepthImagePixel[nui.DepthStream.FramePixelDataLength];
@@ -240,19 +201,7 @@ namespace righthand
 
             //nui.ColorFrameReady += nui_ColorFrameReady;
             nui.DepthFrameReady += nui_DepthFrameReady;
-            line = new Line();
-            line.Stroke = Brushes.Red;
-            line.StrokeThickness = 2;
-            rightCanvas.Children.Add(line);
 
-            screen = new Rectangle();
-            screen.Stroke = Brushes.White;
-            screen.StrokeThickness = 5;
-            screen.Width = 330;
-            screen.Height = 250;
-            Canvas.SetLeft(screen, 154);
-            Canvas.SetTop(screen, 114);
-            leftCanvas.Children.Add(screen);
 
             for (int i = 0; i < 6; i++)
             {
@@ -261,16 +210,8 @@ namespace righthand
                 myEllipse[i].Fill = Brushes.Green;
                 myEllipse[i].Height = 10;
                 myEllipse[i].Width = 10;
-                leftCanvas.Children.Add(myEllipse[i]);
+                rightCanvas.Children.Add(myEllipse[i]);
             }
-            //rightCanvas.Children.Add();
-
-            myEllipse[0].Fill = Brushes.White;
-            myEllipse[1].Fill = Brushes.Violet;
-            myEllipse[2].Fill = Brushes.Yellow;
-            myEllipse[3].Fill = Brushes.Pink;
-            myEllipse[4].Fill = Brushes.Orange;
-            myEllipse[5].Fill = Brushes.LightCyan;
 
             nui.Start();
         }
@@ -281,7 +222,7 @@ namespace righthand
                 if (depthImageFrame != null)
                 {
                     depthImageFrame.CopyDepthImagePixelDataTo(depthPixels);
-
+                   
 
                     int minDepth = depthImageFrame.MinDepth;
                     int maxDepth = depthImageFrame.MaxDepth;
@@ -299,15 +240,15 @@ namespace righthand
                     }
                     int colorPixelIndex = 0;
 
-                    for (int i = 0; i < depthPixels.Length; ++i)
-                    {
-                        short currentDepth = depthPixels[i].Depth;
+                    for (int i = 0; i < depthPixels.Length; ++i)                //depth값에 따라 색깔을 달리해서 출력한다.
+                    {                                                           //최초 인식된 벽값과 비교하여 터치가 일어났을 경우 빨간색으로 출력하고
+                        short currentDepth = depthPixels[i].Depth;              //최초 인식된 벽값과 같을경우 파란색으로 표시한다.
                         short initDepth = initDepthPixels[i].Depth;
                         byte currentIntensity = (byte)(currentDepth >= minDepth && currentDepth <= maxDepth ? currentDepth : 0);
                         byte initIntensity = (byte)(initDepth >= minDepth && initDepth <= maxDepth ? initDepth : 0);
-                        short subDepth = (short)(initDepth - currentDepth);
-
-
+                        short subDepth = (short)(initDepth - currentDepth );
+                        
+                        
                         /*
                         if (0 <= subDepth && subDepth < 15)
                         {
@@ -346,15 +287,15 @@ namespace righthand
                         }
                         ++colorPixelIndex;
                     }
-                    for (int i = 0; i < depthPixels.Length; ++i)
+                    for (int i = 0; i < depthPixels.Length; ++i)        //모든 픽셀들에서 검사한다.
                     {
                         if (pointCnt > 5)
                             break;
-                        if (colorPixels[i * 4 + 1] == 0 && colorPixels[i * 4 + 2] == 255 && i % 640 >= 159 && i % 640 <= 479 && i / 640 >= 119 && i / 640 <= 359)
+                        if (colorPixels[i * 4 + 1] == 0 && colorPixels[i * 4 + 2] == 255 && i%640 >= 159 && i%640 <= 479 && i/640 >= 119 && i/640 <= 359 )      //필요한 부분만 검사한다.
                         {
-                            setPoint(i); // 빨간색을 가진 Pixel을 찾는 재귀 함수
-                            if (pixelCnt > 30)//&& pixelCnt < 100)
-                            {
+                            setPoint(i); //
+                            if (pixelCnt > 30 )//&& pixelCnt < 100)         //빨간색 픽셀이 30개 이상 검출된 포인트의 경우
+                            {                                               //새로고침 해주거나 최초의 포인트인경우 add해준다.
                                 if (head.next() != null)
                                 {
                                     refresh(s_Row / pixelCnt, s_Col / pixelCnt);
@@ -368,26 +309,34 @@ namespace righthand
                         }
                     }
 
-                    removeNoneExist();
+                    removeNoneExist();          //없어진 포인트를 지운다.
                     setEllipse();
-                    imageX = 320;
-                    imageY = 240;
-                    mouseEvents();
+                    if (head.next() != null)
+                    {
+                        textBox1.Text = string.Format("( {0:0.00}, {1:0.00}, {2:0.00}))", head.next().getX(), head.next().getY(),f);
+                        if (head.next().next() != null)
+                        {
+                            textBox2.Text = string.Format("( {0:0.00}, {1:0.00})", head.next().next().getX(), head.next().next().getY());
+                            if (head.next().next().next() != null)
+                                textBox3.Text = string.Format("( {0:0.00}, {1:0.00})", head.next().next().next().getX(), head.next().next().next().getY());
+                            
+                        }
+                    }
 
                     colorBitmap.WritePixels(new Int32Rect(0, 0, colorBitmap.PixelWidth, colorBitmap.PixelHeight), colorPixels, colorBitmap.PixelWidth * sizeof(int), 0);
-
+               
 
                 }
             }
         }
-        public void setPoint(int i)
-        {
+        void setPoint(int i)            //i번째 픽셀을 검사해서 빨간색일경우 주변 4방향 픽셀들을 재귀로 검사하여
+        {                               //연결된 빨간픽셀들의 중점을 s_Col, s_Row에 저장한다.
             if (i < 0 || i >= 307200)
                 return;
             else if (colorPixels[i * 4 + 1] == 0 && colorPixels[i * 4 + 2] == 255)
             {
-                colorPixels[i * 4 + 1] = 1; // 한번 지나간곳은 +로 바꿔서 안들리게함
-                pixelCnt++; // 일정픽셀이상만 포인트로 인식함
+                colorPixels[i * 4 + 1] = 1; // 한번 지나간곳은 Green값을 1로 바꿔서 다시 참조하지 않게 한다.
+                pixelCnt++;                 // 일정픽셀이상만 포인트로 인식함
                 s_Col += i / 640;
                 s_Row += i % 640;
             }
@@ -404,7 +353,7 @@ namespace righthand
             int i = 0;
             f = 0;
             for (T = head; T.next() != null; T = T.next())
-            {
+            {   
                 Canvas.SetLeft(myEllipse[i], T.next().getX());
                 Canvas.SetTop(myEllipse[i], T.next().getY());
                 f++;
@@ -412,121 +361,9 @@ namespace righthand
             }
             for (int j = i; j < 6; j++)
             {
-                Canvas.SetLeft(myEllipse[j], -10);
+                Canvas.SetLeft(myEllipse[j],-10);
                 Canvas.SetTop(myEllipse[j], -10);
             }
-        }
-        public void mouseEvents()
-        {
-            // TouchPoint T;
-            /*
-            if (head.next() != null)
-            {
-                if (head.next().next() == null)
-                    return;
-            }*/
-            if (head.next() != null)
-            {
-                if (!head.next().getclick())
-                {
-                    Canvas_MLBD();
-                    MoveAt(head.next());
-                    Down(MouseButton.Left);
-                    head.next().setclick(true);
-                }
-                else
-                {
-                    Canvas_MM();
-                    MoveAt(head.next());
-                }
-            }
-            /*
-
-            for (T = head; T.next() != null; T = T.next())
-            {
-                //SetCursorPos((int)((T.next().getX() - 159) / imageX * computerX) + 80, (int)((T.next().getY() - 119) / imageY * computerY) + 45);
-                if (!T.next().getclick())
-                {
-                    MoveAt(T.next());
-                    Down(MouseButton.Left);
-                    T.next().setclick(true);
-                }
-                else
-                {
-                    MoveAt(T.next());
-                }
-            }*/
-        }
-        public void MoveAt(TouchPoint T)
-        {
-            /*
-            MouseEventFlag Flag = MouseEventFlag.Move | MouseEventFlag.Absolute;
-            int X = (int)((T.getX()-159)/imageX * computerX );
-            int Y = (int)((T.getY()-119)/imageY * computerY );
-            mouse_event((int)Flag, X, Y, 0, IntPtr.Zero);
-             */
-            SetCursorPos((int)((T.getX() - 159) / imageX * computerX) + 80, (int)((T.getY() - 119) / imageY * computerY) + 45);
-        }
-        public void Down(MouseButton Button)
-        {
-            MouseEventFlag Flag = new MouseEventFlag();
-
-            switch (Button)
-            {
-                case MouseButton.Left: Flag = MouseEventFlag.LeftDown; break;
-                case MouseButton.Right: Flag = MouseEventFlag.RightDown; break;
-                case MouseButton.Middle: Flag = MouseEventFlag.MiddleDown; break;
-                case MouseButton.X: Flag = MouseEventFlag.XDown; break;
-            }
-            Canvas_MLBD();
-            mouse_event((int)Flag, 0, 0, 0, IntPtr.Zero);
-        }
-
-        public void Up(MouseButton Button)
-        {
-            MouseEventFlag Flag = new MouseEventFlag();
-
-            switch (Button)
-            {
-                case MouseButton.Left: Flag = MouseEventFlag.LeftUp; break;
-                case MouseButton.Right: Flag = MouseEventFlag.RightUp; break;
-                case MouseButton.Middle: Flag = MouseEventFlag.MiddleUp; break;
-                case MouseButton.X: Flag = MouseEventFlag.XUp; break;
-            }
-
-            mouse_event((int)Flag, 0, 0, 0, IntPtr.Zero);
-        }
-        private void Canvas_MLBD()
-        {
-            Line line = new Line();
-            line.Stroke = Brushes.Red;
-            line.StrokeThickness = 2;
-
-            double x = ((head.next().getX() - 159) / imageX * computerX) + 80;
-            double y = ((head.next().getY() - 119) / imageY * computerY) + 45;
-            line.X1 = x;
-            line.Y1 = y;
-            line.X2 = x;
-            line.Y2 = y;
-
-            lastX = x;
-            lastY = y;
-        }
-        private void Canvas_MM()
-        {
-            Line line = new Line();
-            line.Stroke = Brushes.Red;
-            line.StrokeThickness = 2;
-            rightCanvas.Children.Add(line);
-            double x2 = ((head.next().getX() - 159) / imageX * computerX) + 80;
-            double y2 = ((head.next().getY() - 119) / imageY * computerY) + 45;
-            line.X1 = lastX;
-            line.Y1 = lastY;
-            line.X2 = x2;
-            line.Y2 = y2;
-
-            lastX = x2;
-            lastY = y2;
         }
         private void Window_Closed(object sender, EventArgs e)
         {
